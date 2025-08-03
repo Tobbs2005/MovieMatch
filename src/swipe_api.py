@@ -11,14 +11,11 @@ import random
 from functools import lru_cache
 import time
 
-# === Paths ===
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_PATH = os.path.join(BASE_DIR, "data", "TMDB_movie_dataset_v11.csv")
-EMBEDDING_PATH = os.path.join(BASE_DIR, "data", "movie_embeddings_v11.npy")
+# Import R2 data loader
+from r2_config import load_data_with_fallback
 
-# === Load & Prepare Data ===
-df = pd.read_csv(DATA_PATH)
-df.fillna('', inplace=True)
+# === Load Data (R2 or Local Fallback) ===
+df, embeddings = load_data_with_fallback()
 
 # Combine metadata fields into a single text input for embedding
 df['metadata'] = (
@@ -29,10 +26,9 @@ df['metadata'] = (
     df['spoken_languages']
 ).str.lower()
 
-# === Load Embeddings ===
+# === Load Embeddings & Build FAISS Index ===
 model = SentenceTransformer("all-MiniLM-L6-v2")
-embeddings = np.load(EMBEDDING_PATH)
-embeddings = embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)
+# embeddings are already loaded and normalized from load_data_with_fallback()
 
 # === Build FAISS Index ===
 index = faiss.IndexFlatIP(embeddings.shape[1])

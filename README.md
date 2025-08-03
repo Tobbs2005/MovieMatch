@@ -76,17 +76,40 @@ pip install -r requirements.txt
 Create a `.env.local` file in the root directory:
 
 ```env
+# Next.js Configuration
 NEXT_PUBLIC_API_URL=http://localhost:8000
 NODE_ENV=development
+
+# Cloudflare R2 Configuration (Optional - for production/cloud deployment)
+CLOUDFLARE_ACCOUNT_ID=your_account_id_here
+R2_ACCESS_KEY_ID=your_access_key_here  
+R2_SECRET_ACCESS_KEY=your_secret_key_here
+R2_BUCKET_NAME=movie-match-data
 ```
 
-### 5. Data Setup (Optional)
+> **Note**: R2 credentials are optional for local development. The app will fall back to local data files if R2 is not configured.
 
-For full AI functionality, place your data files in the `src/data/` directory:
+### 5. Data Setup
+
+**Option A: Local Development (Recommended for getting started)**
+Place your data files in the `src/data/` directory:
 - `TMDB_movie_dataset_v11.csv` - Movie dataset
 - `movie_embeddings_v11.npy` - Pre-computed movie embeddings
 
-> **Note**: The app will work with sample data if these files are not provided.
+**Option B: Cloudflare R2 (Recommended for production)**
+1. **Create R2 bucket** in your Cloudflare dashboard
+2. **Get API credentials** from R2 > Manage R2 API tokens
+3. **Configure environment variables** in `.env.local`
+4. **Upload data to R2**:
+   ```bash
+   # First place local files in src/data/, then:
+   python upload_to_r2.py upload
+   
+   # Verify upload
+   python upload_to_r2.py list
+   ```
+
+> **Note**: The app automatically uses R2 if configured, otherwise falls back to local files.
 
 ### 6. Start Development Server
 
@@ -254,6 +277,33 @@ npm run lint               # Run ESLint on frontend code
    - Use browser dev tools Network tab to inspect requests
 
 ## Production Deployment
+
+### Cloudflare R2 Setup
+
+For production deployment, use Cloudflare R2 to store your large data files:
+
+1. **Create R2 Bucket**:
+   - Go to Cloudflare Dashboard > R2 Object Storage
+   - Create a new bucket (e.g., `movie-match-data`)
+
+2. **Generate API Token**:
+   - Go to R2 > Manage R2 API tokens
+   - Create token with "Object Read & Write" permissions
+   - Save the Access Key ID and Secret Access Key
+
+3. **Configure Environment**:
+   ```env
+   CLOUDFLARE_ACCOUNT_ID=your_account_id
+   R2_ACCESS_KEY_ID=your_access_key  
+   R2_SECRET_ACCESS_KEY=your_secret_key
+   R2_BUCKET_NAME=your-bucket-name
+   ```
+
+4. **Upload Data**:
+   ```bash
+   pip install boto3 python-dotenv
+   python upload_to_r2.py upload
+   ```
 
 ### Frontend (Vercel/Netlify)
 ```bash
