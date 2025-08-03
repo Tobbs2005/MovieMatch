@@ -28,6 +28,19 @@ export default function MovieMatchApp() {
   const [userVector, setUserVector] = useState<number[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect if device is mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Filter state
   const [filters, setFilters] = useState<FilterState>({
@@ -289,7 +302,7 @@ export default function MovieMatchApp() {
               </div>
 
               {isLoading ? (
-                <div className="flex flex-col items-center justify-center py-12">
+                <div className="flex flex-col items-center justify-center py-12 h-200">
                   <Loader2 className="w-8 h-8 animate-spin mb-4" />
                   <p className="text-muted-foreground">Finding your next favorite movie...</p>
                 </div>
@@ -311,25 +324,36 @@ export default function MovieMatchApp() {
                   />
                   
                   <div className="mt-6 text-center">
-                    <p className="text-muted-foreground">
+                             {(userLists.liked.length >= 5) ? (
+     
+                      <p className="text-muted-foreground">
                       AI-powered recommendations based on your taste
                     </p>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        Algorithm is learning your tastes and preferences...
+                      </p>
+                    )
+                      
+                    }
+                    
                     <div className="flex items-center justify-center gap-4 mt-2 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <span className="text-red-400">←</span> Swipe left to pass
                       </span>
-                      <span className="flex items-center gap-1">
-                        <span className="text-blue-400">↑</span> Swipe up to save
-                      </span>
+                      {!isMobile && (
+                        <span className="flex items-center gap-1">
+                          <span className="text-blue-400">↑</span> Swipe up to save
+                        </span>
+                      )}
                       <span className="flex items-center gap-1">
                         <span className="text-green-400">→</span> Swipe right to like
                       </span>
                     </div>
-                    {userLists.liked.length >= 5 && (
-                      <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-muted-foreground mt-1">
                         Learning from {userLists.liked.length} liked movies
                       </p>
-                    )}
+
                   </div>
                 </>
               ) : (

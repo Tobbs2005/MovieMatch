@@ -36,8 +36,7 @@ export function SwipeCard({
 
   const handleMove = (e: React.MouseEvent | React.TouchEvent) => {
     if (!isDragging || disabled) return;
-    
-    e.preventDefault();
+  
     const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX;
     const clientY = 'touches' in e ? e.touches[0].clientY : e.clientY;
     
@@ -53,27 +52,17 @@ export function SwipeCard({
     
     setIsDragging(false);
 
-    const threshold = 100; // Reduced threshold for easier swiping
-    const verticalThreshold = 80; // Reduced threshold for easier upward swipe
-
-    // Haptic feedback for mobile devices
-    const triggerHapticFeedback = () => {
-      if (typeof window !== 'undefined' && 'navigator' in window && 'vibrate' in navigator) {
-        navigator.vibrate(50);
-      }
-    };
+    const threshold = 120;
+    const verticalThreshold = 100;
 
     // Check for swipe up first (save action)
     if (translateY < -verticalThreshold && Math.abs(translateX) < threshold) {
-      triggerHapticFeedback();
       onSwipeUp?.();
     }
     // Check for horizontal swipes
     else if (translateX > threshold) {
-      triggerHapticFeedback();
       onSwipeRight?.(); // Like
     } else if (translateX < -threshold) {
-      triggerHapticFeedback();
       onSwipeLeft?.(); // Dislike
     }
 
@@ -93,9 +82,9 @@ export function SwipeCard({
   };
 
   const getSwipeIndicator = () => {
-    const threshold = 50; // Lower threshold for earlier visual feedback
+    const threshold = 60;
     
-    if (translateY < -threshold && Math.abs(translateX) < threshold * 1.5) {
+    if (translateY < -threshold && Math.abs(translateX) < threshold) {
       return 'SAVE';
     } else if (translateX > threshold) {
       return 'LIKE';
@@ -130,15 +119,14 @@ export function SwipeCard({
         
         {/* Swipe Indicators */}
         {swipeIndicator && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <div className={`
-              px-8 py-4 rounded-2xl text-3xl font-black border-4 backdrop-blur-md shadow-2xl
-              transform transition-all duration-200 scale-110
+              px-6 py-3 rounded-full text-2xl font-bold border-4 backdrop-blur-sm
               ${swipeIndicator === 'LIKE' 
-                ? 'bg-green-500/30 text-green-300 border-green-300 shadow-green-500/30' 
+                ? 'bg-green-500/20 text-green-400 border-green-400' 
                 : swipeIndicator === 'PASS'
-                ? 'bg-red-500/30 text-red-300 border-red-300 shadow-red-500/30'
-                : 'bg-blue-500/30 text-blue-300 border-blue-300 shadow-blue-500/30'
+                ? 'bg-red-500/20 text-red-400 border-red-400'
+                : 'bg-blue-500/20 text-blue-400 border-blue-400'
               }
             `}>
               {swipeIndicator === 'LIKE' && '❤️ LIKE'}
