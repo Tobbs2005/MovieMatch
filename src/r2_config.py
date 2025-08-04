@@ -156,3 +156,101 @@ def load_data_with_fallback():
         embeddings = embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)
         print("✅ Successfully loaded data from local files")
         return df, embeddings
+
+# Memory-efficient loading for cloud deployment
+def load_data_with_fallback_chunked(max_movies=5000):
+    """
+    Load data from R2 if configured, with memory-efficient chunked processing
+    Only keeps top movies by vote count to stay within memory limits
+    """
+    try:
+        # Try to load from R2
+        r2_loader = R2DataLoader()
+        
+        # Download and process CSV in chunks
+        csv_path = r2_loader.download_file('TMDB_movie_dataset_v11.csv')
+        
+        print(f"📊 Processing dataset in chunks to find top {max_movies} movies...")
+        
+        # First pass: find top movies by vote_count without loading everything
+        top_movies_df = None
+        chunk_size = 10000
+        
+        for chunk in pd.read_csv(csv_path, chunksize=chunk_size):
+            chunk = chunk.fillna('')
+            # Only keep movies with reasonable vote counts
+            chunk = chunk[chunk['vote_count'] > 10]
+            
+            if top_movies_df is None:
+                top_movies_df = chunk.nlargest(max_movies, 'vote_count')
+            else:
+                # Combine and keep only top movies
+                combined = pd.concat([top_movies_df, chunk])
+                top_movies_df = combined.nlargest(max_movies, 'vote_count')
+        
+        # Get the indices of the top movies for embeddings
+        df_full = pd.read_csv(csv_path)
+        df_full = df_full.fillna('')
+        top_indices = df_full[df_full['id'].isin(top_movies_df['id'])].index.tolist()
+        
+        # Load only the embeddings for top movies
+        embeddings_path = r2_loader.download_file('movie_embeddings_v11.npy')
+        embeddings_full = np.load(embeddings_path)
+        embeddings = embeddings_full[top_indices]
+        embeddings = embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)
+        
+        # Clean up
+        del df_full, embeddings_full
+        import gc
+        gc.collect()
+        
+        print(f"✅ Successfully loaded top {len(top_movies_df)} movies from R2 (memory optimized)")
+        return top_movies_df.reset_index(drop=True), embeddings
+        
+    except Exception as e:
+        print(f"⚠️  R2 chunked loading failed: {str(e)}")
+        return load_data_with_fallback_simple(max_movies)
+
+def load_data_with_fallback_simple(max_movies=5000):
+    """Fallback to local files with memory optimization"""
+    print("📁 Falling back to local files...")
+    
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    data_path = os.path.join(base_dir, "data", "TMDB_movie_dataset_v11.csv")
+    embedding_path = os.path.join(base_dir, "data", "movie_embeddings_v11.npy")
+    
+    if not os.path.exists(data_path) or not os.path.exists(embedding_path):
+        raise Exception(f"Neither R2 nor local data files are available")
+    
+    # Load and process in chunks for local files too
+    print(f"📊 Processing local dataset in chunks to find top {max_movies} movies...")
+    
+    top_movies_df = None
+    chunk_size = 10000
+    
+    for chunk in pd.read_csv(data_path, chunksize=chunk_size):
+        chunk = chunk.fillna('')
+        chunk = chunk[chunk['vote_count'] > 10]
+        
+        if top_movies_df is None:
+            top_movies_df = chunk.nlargest(max_movies, 'vote_count')
+        else:
+            combined = pd.concat([top_movies_df, chunk])
+            top_movies_df = combined.nlargest(max_movies, 'vote_count')
+    
+    # Get indices and load corresponding embeddings
+    df_full = pd.read_csv(data_path)
+    df_full = df_full.fillna('')
+    top_indices = df_full[df_full['id'].isin(top_movies_df['id'])].index.tolist()
+    
+    embeddings_full = np.load(embedding_path)
+    embeddings = embeddings_full[top_indices]
+    embeddings = embeddings / np.linalg.norm(embeddings, axis=1, keepdims=True)
+    
+    # Clean up
+    del df_full, embeddings_full
+    import gc
+    gc.collect()
+    
+    print(f"✅ Successfully loaded top {len(top_movies_df)} movies from local files (memory optimized)")
+    return top_movies_df.reset_index(drop=True), embeddings

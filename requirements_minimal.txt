@@ -1,0 +1,10 @@
+# Essential dependencies for memory-efficient deployment
+fastapi==0.116.1
+uvicorn==0.34.0
+numpy==2.3.2
+pandas==2.3.0
+sentence-transformers==3.4.0
+faiss-cpu==1.11.0.post1
+boto3==1.37.23
+python-multipart==0.0.20
+requests==2.32.3

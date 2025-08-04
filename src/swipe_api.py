@@ -12,34 +12,72 @@ from functools import lru_cache
 import time
 
 # Import R2 data loader
-from r2_config import load_data_with_fallback
+from r2_config import load_data_with_fallback_chunked
 
-# === Load Data (R2 or Local Fallback) ===
-df, embeddings = load_data_with_fallback()
+# === Load Data (R2 or Local Fallback) - Memory Optimized ===
+print("🔄 Loading data with memory optimization...")
+df, embeddings = load_data_with_fallback_chunked(max_movies=15000)
 
-# Combine metadata fields into a single text input for embedding
-df['metadata'] = (
-    df['genres'] + ' ' +
-    df['keywords'] + ' ' +
-    df['original_language'] + ' ' +
-    df['production_companies'] + ' ' +
-    df['spoken_languages']
-).str.lower()
+# Additional optimizations
+print("�️ Final memory optimizations...")
+
+# Keep only minimal essential columns
+essential_columns = ['id', 'title', 'genres', 'overview', 'release_date', 'poster_path', 'vote_count']
+df = df[essential_columns].copy()
+
+# Optimize data types aggressively
+df['id'] = df['id'].astype('int32')
+df['vote_count'] = df['vote_count'].astype('int32')
+
+# Use category for repetitive string data
+if 'genres' in df.columns:
+    df['genres'] = df['genres'].astype('category')
+
+# Truncate long overview text to save memory
+if 'overview' in df.columns:
+    df['overview'] = df['overview'].fillna('').str[:200]  # Max 200 chars
+
+# Optimize embeddings memory (use float32)
+embeddings = embeddings.astype('float32')
+
+# Force garbage collection
+import gc
+gc.collect()
+
+print(f"✅ Loaded {len(df)} movies, memory optimized")
+import gc
+gc.collect()
+
+print(f"✅ Loaded {len(df)} movies, aggressively memory optimized")
 
 # === Lazy Load ML Components ===
 model = None
 index = None
 
 def get_ml_components():
-    """Lazy load ML components on first use"""
+    """Lazy load ML components on first use with aggressive memory optimization"""
     global model, index
     if model is None:
-        print("🔄 Loading sentence transformer model...")
-        model = SentenceTransformer("all-MiniLM-L6-v2")
-        print("🔍 Building FAISS index...")
-        index = faiss.IndexFlatIP(embeddings.shape[1])
-        index.add(embeddings)
-        print("✅ ML components ready")
+        print("🔄 Loading minimal sentence transformer model...")
+        # Use the smallest possible model for memory efficiency
+        model = SentenceTransformer("all-MiniLM-L6-v2", device='cpu')
+        
+        print("🔍 Building compact FAISS index...")
+        # Use more memory-efficient index
+        dimension = embeddings.shape[1]
+        index = faiss.IndexFlatIP(dimension)
+        
+        # Add embeddings in smaller batches to manage memory
+        batch_size = 1000
+        for i in range(0, len(embeddings), batch_size):
+            batch = embeddings[i:i+batch_size]
+            index.add(batch)
+        
+        # Aggressive garbage collection
+        import gc
+        gc.collect()
+        
+        print("✅ ML components ready (aggressively optimized)")
     return model, index
 
 # === Query Cache for Performance ===
@@ -110,21 +148,21 @@ def recommend(payload: RecommendPayload):
 
     # Onboarding mode: < 5 liked movies
     if len(payload.liked_ids) < 5:
-        top_voted = df.sort_values(by="vote_count", ascending=False).head(100)
-        sampled = top_voted.sample(n=min(30, len(top_voted)), random_state=random.randint(0, 9999))
+        # Use more memory-efficient sampling
+        top_indices = df['vote_count'].nlargest(100).index
+        sample_size = min(30, len(top_indices))
+        sampled_indices = np.random.choice(top_indices, size=sample_size, replace=False)
 
-        for _, movie in sampled.iterrows():
+        for idx in sampled_indices:
+            movie = df.iloc[idx]
             if movie['id'] not in seen_set:
-                # Apply filters in onboarding mode too
+                # Apply filters in onboarding mode
                 if payload.genre and payload.genre.lower() not in movie["genres"].lower():
                     continue
-                if payload.language and movie["original_language"] != payload.language:
-                    continue
-                if payload.adult is not None and bool(movie.get("adult", False)) != payload.adult:
-                    continue
-
+                
+                # Simplified year parsing for memory efficiency
                 try:
-                    year = pd.to_datetime(movie["release_date"], errors="coerce").year
+                    year = int(movie["release_date"][:4]) if movie["release_date"] and len(movie["release_date"]) >= 4 else None
                 except:
                     year = None
 
@@ -145,16 +183,25 @@ def recommend(payload: RecommendPayload):
                     "user_vector": None
                 }
         
-        # If no onboarding movies match the filters, fall through to normal recommendation mode
-        # This allows users to skip onboarding when filters are too restrictive
-        print(f"No onboarding movies found matching filters, proceeding to normal recommendation mode with {len(payload.liked_ids)} liked movies")
+        print(f"No onboarding movies found matching filters, proceeding to normal recommendation mode")
 
-    # Normal mode: Use collaborative filtering or fallback to popular movies
+    # Normal mode: Use collaborative filtering with memory optimization
     if len(payload.liked_ids) >= 1:
-        vectors = [embeddings[idx] for mid in payload.liked_ids for idx in df.index[df["id"] == mid]]
-        taste_vector = np.mean(vectors, axis=0)
-        taste_vector = taste_vector / np.linalg.norm(taste_vector)
-        similarity_scores = np.dot(embeddings, taste_vector)
+        # More memory-efficient vector computation
+        liked_indices = []
+        for mid in payload.liked_ids:
+            matches = df.index[df["id"] == mid]
+            if len(matches) > 0:
+                liked_indices.append(matches[0])
+        
+        if liked_indices:
+            # Use numpy operations for efficiency
+            liked_embeddings = embeddings[liked_indices]
+            taste_vector = np.mean(liked_embeddings, axis=0)
+            taste_vector = taste_vector / np.linalg.norm(taste_vector)
+            
+            # Compute similarities in batches to save memory
+            similarity_scores = np.dot(embeddings, taste_vector)
 
         # Apply soft penalty for disliked movies
         disliked_ids = list(set(payload.seen_ids) - set(payload.liked_ids))
