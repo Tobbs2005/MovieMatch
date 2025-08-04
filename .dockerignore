@@ -1,0 +1,19 @@
+# Ignore unnecessary files for Docker build
+node_modules/
+.next/
+.git/
+.env.local
+.env
+__pycache__/
+*.pyc
+venv/
+.vscode/
+.DS_Store
+*.log
+.gitignore
+README.md
+package.json
+package-lock.json
+*.md
+public/
+.vercel/

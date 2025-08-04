@@ -54,6 +54,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# === Health Check Endpoint ===
+@app.get("/")
+def health_check():
+    """Health check endpoint for Railway and other platforms"""
+    return {
+        "status": "healthy",
+        "message": "MovieMatch AI Backend is running",
+        "movies_loaded": len(df),
+        "embeddings_shape": list(embeddings.shape)
+    }
+
+@app.get("/health")
+def health():
+    """Alternative health check endpoint"""
+    return {"status": "ok"}
+
 # === Request Models ===
 class RecommendPayload(BaseModel):
     user_vector: Optional[list] = None
