@@ -26,13 +26,21 @@ df['metadata'] = (
     df['spoken_languages']
 ).str.lower()
 
-# === Load Embeddings & Build FAISS Index ===
-model = SentenceTransformer("all-MiniLM-L6-v2")
-# embeddings are already loaded and normalized from load_data_with_fallback()
+# === Lazy Load ML Components ===
+model = None
+index = None
 
-# === Build FAISS Index ===
-index = faiss.IndexFlatIP(embeddings.shape[1])
-index.add(embeddings)
+def get_ml_components():
+    """Lazy load ML components on first use"""
+    global model, index
+    if model is None:
+        print("🔄 Loading sentence transformer model...")
+        model = SentenceTransformer("all-MiniLM-L6-v2")
+        print("🔍 Building FAISS index...")
+        index = faiss.IndexFlatIP(embeddings.shape[1])
+        index.add(embeddings)
+        print("✅ ML components ready")
+    return model, index
 
 # === Query Cache for Performance ===
 query_cache: Dict[str, Any] = {}
@@ -42,7 +50,8 @@ MAX_CACHE_SIZE = 100
 @lru_cache(maxsize=50)
 def get_query_embedding(query: str) -> np.ndarray:
     """Cache query embeddings to avoid recomputation"""
-    return model.encode(query, normalize_embeddings=True)
+    model_instance, _ = get_ml_components()
+    return model_instance.encode(query, normalize_embeddings=True)
 
 # === FastAPI Setup ===
 app = FastAPI()
@@ -278,7 +287,8 @@ def hybrid_search(payload: SearchPayload):
         query_embedding = query_embedding.reshape(1, -1).astype('float32')
         
         # FAISS search - much faster than computing all similarities
-        scores, indices = index.search(query_embedding, 12)  # Get top 12 semantic matches
+        _, index_instance = get_ml_components()
+        scores, indices = index_instance.search(query_embedding, 12)  # Get top 12 semantic matches
         semantic_results = df.iloc[indices[0]]
 
     # --- Combine Results ---

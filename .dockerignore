@@ -19,17 +19,16 @@ public/
 .vercel/
 upload_to_r2.py
 R2_SETUP.md
-RAILWAY_DEPLOY.md
-requirements.txt
 tsconfig.json
 next.config.ts
 postcss.config.mjs
 next-env.d.ts
 tailwind.config.js
+minimal_api.py
 
-# EXCLUDE ALL DATA FILES - use R2 instead
-src/data/
+# CRITICAL: Exclude large data files (2.3GB total) - use R2 instead
+src/data/TMDB_movie_dataset_v11.csv
+src/data/movie_embeddings_v11.npy
+
+# Keep small files
 !src/data/movies.ts
-
-# Keep only essential source files
-src/__pycache__/
