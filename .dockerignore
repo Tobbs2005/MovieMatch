@@ -17,10 +17,19 @@ package-lock.json
 *.md
 public/
 .vercel/
+upload_to_r2.py
+R2_SETUP.md
+RAILWAY_DEPLOY.md
+requirements.txt
+tsconfig.json
+next.config.ts
+postcss.config.mjs
+next-env.d.ts
+tailwind.config.js
 
-# EXCLUDE LARGE DATA FILES (2.3GB) - use R2 instead
-src/data/TMDB_movie_dataset_v11.csv
-src/data/movie_embeddings_v11.npy
-
-# Keep only small files
+# EXCLUDE ALL DATA FILES - use R2 instead
+src/data/
 !src/data/movies.ts
+
+# Keep only essential source files
+src/__pycache__/
