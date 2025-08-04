@@ -4,8 +4,8 @@
     "builder": "DOCKERFILE"
   },
   "deploy": {
-    "startCommand": "python -m uvicorn src.swipe_api:app --host 0.0.0.0 --port $PORT",
-    "healthcheckPath": "/",
+    "startCommand": "python -m uvicorn src.swipe_api_lite:app --host 0.0.0.0 --port $PORT",
+    "healthcheckPath": "/health",
     "healthcheckTimeout": 300
   }
 }
