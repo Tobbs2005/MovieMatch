@@ -1,101 +1,23 @@
 # MovieMatch AI 🎬
 
-A modern movie recommendation system with AI-powered suggestions and swipe-based interactions.
+A Next.js-powered movie recommendation app with AI-driven suggestions using machine learning and semantic search.
 
-## 🏗️ **Project Structure**
+## Features
 
-```
-movie-match/
-├── frontend/          # Next.js React frontend
-│   ├── src/
-│   │   ├── app/       # Next.js app router pages
-│   │   ├── components/# React components
-│   │   ├── services/  # API integration
-│   │   ├── styles/    # CSS and styling
-│   │   └── types/     # TypeScript definitions
-│   ├── public/        # Static assets
-│   └── package.json   # Frontend dependencies
-│
-└── backend/           # FastAPI Python backend (deployed on Hugging Face Spaces)
-    ├── src/
-    │   ├── swipe_api.py    # Main FastAPI application
-    │   ├── r2_config.py    # Data loading configuration
-    │   └── sample_data.py  # Sample data generator
-    ├── app.py         # Hugging Face Spaces entry point
-    ├── Dockerfile     # Container configuration
-    └── requirements.txt # Python dependencies
-```
+- **AI-Powered Recommendations**: Uses sentence transformers and FAISS for intelligent movie suggestions
+- **Smart Filtering**: Filter by genre, language, and release year
+- **Swipe Interface**: Modern Tinder-like UI for discovering movies
+- **User Lists**: Track liked, saved, and disliked movies
+- **Real-time Learning**: AI learns from your preferences and improves suggestions
+- **Concurrent Development**: One command starts both frontend and backend
+- **Dark/Light Mode**: Modern theme switching with system preference detection
 
-## 🚀 **Getting Started**
-
-### Frontend Development
-```bash
-cd frontend
-npm install
-npm run dev
-```
-Access at: http://localhost:3000
-
-### Backend (Deployed)
-The backend is deployed on Hugging Face Spaces:
-- **URL:** https://tobbs2005-movie-match.hf.space
-- **Status:** https://tobbs2005-movie-match.hf.space/health
-
-## 🔧 **Architecture**
-
-```
-Frontend (Vercel)  →  Backend API (Hugging Face Spaces)
-     ↓                           ↓
-Next.js React App  →  FastAPI Python Server
-```
-
-## ✨ **Features**
-
-- **AI-Powered Recommendations**: Uses sentence transformers for semantic similarity
-- **Swipe Interface**: Modern Tinder-like UI for movie discovery
-- **Real-time Learning**: Adapts to user preferences
-- **Smart Filtering**: Filter by genre, year, and preferences
-- **Responsive Design**: Works on all devices
-- **Dark/Light Mode**: Theme switching with system preference
-
-## 🛠️ **Tech Stack**
+## Tech Stack
 
 ### Frontend
 - **Next.js 15** with App Router
 - **React 19** with TypeScript
 - **Tailwind CSS** for styling
-- **Radix UI** for components
-
-### Backend
-- **FastAPI** for API framework
-- **Sentence Transformers** for AI recommendations
-- **FAISS** for similarity search
-- **Pandas & NumPy** for data processing
-
-## 🚢 **Deployment**
-
-- **Frontend:** Deployed on Vercel
-- **Backend:** Deployed on Hugging Face Spaces
-- **Data:** Cloudflare R2 (with local fallbacks)
-
-## 📱 **Usage**
-
-1. **Swipe** on movies to indicate preferences
-2. **Get recommendations** based on your taste
-3. **Search** for specific movies
-4. **Filter** by genres and preferences
-5. **Track** your liked and saved movies
-
-## 🔗 **API Endpoints**
-
-- `GET /` - Health check
-- `POST /recommend` - Get personalized recommendations
-- `POST /search` - Search movies semantically
-- `GET /movies/random` - Get random movies for swiping
-
-## 📄 **License**
-
-MIT License - Feel free to use and modify!
 - **Framer Motion** for animations
 - **Radix UI** components
 - **Sonner** for notifications
