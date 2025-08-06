@@ -21,11 +21,12 @@ def test_minimal_api():
     print(f"📊 Initial memory: {initial_memory:.1f} MB")
     
     try:
-        # Change to the project directory
+        # Change to the project directory and add src to path
         sys.path.append('/Users/TobyFang/Desktop/movie-match')
+        sys.path.append('/Users/TobyFang/Desktop/movie-match/src')
         
-        print("📦 Loading ultra-minimal API...")
-        import minimal_api
+        print("📦 Loading optimized API...")
+        import optimized_api
         
         current_memory = get_memory_usage()
         print(f"📊 After loading API: {current_memory:.1f} MB")
@@ -33,7 +34,7 @@ def test_minimal_api():
         
         # Test that ML components are NOT loaded yet
         print("🔍 Testing lazy loading (ML components should not be loaded yet)...")
-        if minimal_api.model is None:
+        if optimized_api.model is None:
             print("✅ ML components not loaded (good - lazy loading working)")
         else:
             print("⚠️  ML components already loaded")
