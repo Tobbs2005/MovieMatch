@@ -5,6 +5,7 @@ from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
+from sentence_transformers import SentenceTransformer
 import faiss
 import random
 from functools import lru_cache
@@ -15,7 +16,7 @@ from r2_config import load_data_with_fallback_chunked
 
 # === Load Data (R2 or Local Fallback) - Memory Optimized ===
 print("🔄 Loading data with memory optimization...")
-df, embeddings = load_data_with_fallback_chunked(max_movies=10000)
+df, embeddings = load_data_with_fallback_chunked(max_movies=5000)
 
 # Additional optimizations
 print("�️ Final memory optimizations...")
