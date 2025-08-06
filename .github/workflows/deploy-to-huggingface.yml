@@ -1,0 +1,63 @@
+name: Deploy Backend to Hugging Face Spaces
+
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'backend/**' ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+        lfs: true
+
+    - name: Setup Git
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+    - name: Clone Hugging Face Space
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      run: |
+        git clone https://huggingface.co/spaces/Tobbs2005/movie-match hf-space
+        cd hf-space
+        git remote set-url origin https://Tobbs2005:$HF_TOKEN@huggingface.co/spaces/Tobbs2005/movie-match
+
+    - name: Copy backend files to HF space
+      run: |
+        # Remove all files except .git
+        cd hf-space
+        find . -not -path './.git*' -delete 2>/dev/null || true
+        
+        # Copy backend files
+        cp -r ../backend/* .
+        
+        # Ensure we have required HF files
+        if [ ! -f "README.md" ]; then
+          echo "# Movie Match Backend API" > README.md
+          echo "" >> README.md
+          echo "Backend API for Movie Match - A Tinder-style movie discovery app." >> README.md
+        fi
+
+    - name: Commit and push to Hugging Face
+      run: |
+        cd hf-space
+        git add .
+        
+        # Check if there are changes to commit
+        if git diff --staged --quiet; then
+          echo "No changes to deploy"
+          exit 0
+        fi
+        
+        git commit -m "Auto-deploy from GitHub: ${{ github.sha }}"
+        git push origin main
+
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
