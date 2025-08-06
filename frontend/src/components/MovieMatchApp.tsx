@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { MovieCard } from './MovieCard';
 import { SwipeControls } from './SwipeControls';
 import { MovieLists } from './MovieLists';
@@ -29,6 +29,10 @@ export default function MovieMatchApp() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  
+  // Ref to track last fetched movie to prevent duplicates
+  const lastFetchedMovieId = useRef<number | null>(null);
+  const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Detect if device is mobile
   useEffect(() => {
@@ -77,6 +81,11 @@ export default function MovieMatchApp() {
   const fetchNextMovie = useCallback(async () => {
     if (isLoading) return;
     
+    // Clear any pending fetch timeout
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+    
     setIsLoading(true);
     try {
       const seenIds = getAllSeenIds();
@@ -108,6 +117,21 @@ export default function MovieMatchApp() {
         toast.error(response.error);
         setCurrentMovie(null);
       } else if (response.movie) {
+        // Check if we already have this movie in our seen lists OR if it's the same as last fetched
+        const movieExists = seenIds.includes(response.movie.movieId) || 
+                           lastFetchedMovieId.current === response.movie.movieId;
+        
+        if (movieExists) {
+          console.log('Duplicate movie detected, fetching another...');
+          setIsLoading(false);
+          // Use timeout to prevent rapid successive calls
+          fetchTimeoutRef.current = setTimeout(() => fetchNextMovie(), 200);
+          return;
+        }
+
+        // Update last fetched movie ID
+        lastFetchedMovieId.current = response.movie.movieId;
+
         const movie: Movie = {
           movieId: response.movie.movieId,
           title: response.movie.title,
@@ -160,19 +184,23 @@ export default function MovieMatchApp() {
   };
 
   const handleAction = async (action: 'like' | 'dislike' | 'skip' | 'save') => {
-    if (!currentMovie) return;
+    if (!currentMovie || isLoading) return; // Prevent action if already loading
+
+    // Immediately clear current movie for instant feedback
+    const movieToProcess = currentMovie;
+    setCurrentMovie(null);
 
     const newUserLists = { ...userLists };
     
     switch (action) {
       case 'like':
-        newUserLists.liked = [...newUserLists.liked, currentMovie];
+        newUserLists.liked = [...newUserLists.liked, movieToProcess];
         break;
       case 'dislike':
-        newUserLists.disliked = [...newUserLists.disliked, currentMovie];
+        newUserLists.disliked = [...newUserLists.disliked, movieToProcess];
         break;
       case 'save':
-        newUserLists.saved = [...newUserLists.saved, currentMovie];
+        newUserLists.saved = [...newUserLists.saved, movieToProcess];
         break;
       case 'skip':
         // No action needed for skip
@@ -181,21 +209,21 @@ export default function MovieMatchApp() {
 
     setUserLists(newUserLists);
 
-    // Submit feedback to backend (except for skip and save)
+    // Immediately fetch next movie for instant swipe experience
+    fetchNextMovie();
+
+    // Submit feedback to backend in background (except for skip and save)
     if (action === 'like' || action === 'dislike') {
       try {
         await MovieAPI.submitFeedback({
           user_vector: userVector,
-          movie_id: currentMovie.movieId,
+          movie_id: movieToProcess.movieId,
           feedback: action
         });
       } catch (error) {
         console.error('Error submitting feedback:', error);
       }
     }
-    
-    // Fetch next movie
-    fetchNextMovie();
   };
 
   const handleMoveMovie = (movie: Movie, fromList: 'liked' | 'saved' | 'disliked', toList: 'liked' | 'saved' | 'disliked') => {
@@ -357,7 +385,7 @@ export default function MovieMatchApp() {
                   </div>
                 </>
               ) : (
-                <div className="text-center">
+                <div className="text-center h-160">
                   <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
