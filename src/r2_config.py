@@ -212,7 +212,7 @@ def load_data_with_fallback_chunked(max_movies=5000):
         return load_data_with_fallback_simple(max_movies)
 
 def load_data_with_fallback_simple(max_movies=5000):
-    """Fallback to local files with memory optimization"""
+    """Fallback to local files with memory optimization, or sample data if no files available"""
     print("📁 Falling back to local files...")
     
     base_dir = os.path.dirname(os.path.abspath(__file__))
@@ -220,7 +220,9 @@ def load_data_with_fallback_simple(max_movies=5000):
     embedding_path = os.path.join(base_dir, "data", "movie_embeddings_v11.npy")
     
     if not os.path.exists(data_path) or not os.path.exists(embedding_path):
-        raise Exception(f"Neither R2 nor local data files are available")
+        print("⚠️  No local data files found, generating sample data for testing...")
+        from sample_data import generate_sample_movies
+        return generate_sample_movies(min(max_movies, 1000))  # Limit sample data
     
     # Load and process in chunks for local files too
     print(f"📊 Processing local dataset in chunks to find top {max_movies} movies...")
