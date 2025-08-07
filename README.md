@@ -1,4 +1,4 @@
-# MovieMatch AI 🎬
+# MovieMatch 🎬
 
 A modern movie recommendation system with AI-powered suggestions and swipe-based interactions.
 
@@ -204,7 +204,6 @@ npm run dev
 This will start both services concurrently with colored output:
 - **🎨 Frontend**: http://localhost:3000 (or 3001 if 3000 is busy)
 - **🤖 Backend**: http://localhost:8000
-- **📚 API Docs**: http://localhost:8000/docs
 
 That's it! The app will automatically open in your browser and both services will reload when you make changes.
 

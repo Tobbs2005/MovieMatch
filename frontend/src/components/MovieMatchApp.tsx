@@ -277,7 +277,7 @@ export default function MovieMatchApp() {
                 onClick={handleGoHome}
                 title="Go back to intro screen"
               >
-                MovieMatch AI
+                MovieMatch
               </h1>
             </div>
             
