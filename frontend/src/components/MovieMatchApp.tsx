@@ -299,8 +299,6 @@ export default function MovieMatchApp() {
                 <List className="w-4 h-4" />
                 My Lists ({userLists.liked.length + userLists.saved.length})
               </Button>
-
-              <ThemeToggle />
             </div>
           </div>
         </div>

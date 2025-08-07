@@ -171,7 +171,7 @@ export function Filters({ filters, onFiltersChange, availableGenres, availableLa
                   max={yearRange[1]}
                   min={yearRange[0]}
                   step={1}
-                  className="w-full"
+                  className="w-full [&>span:first-child]:bg-white/20 [&>span:first-child]:h-2 [&_[role=slider]]:bg-white [&_[role=slider]]:border-2 [&_[role=slider]]:border-white [&_[role=slider]]:w-4 [&_[role=slider]]:h-4"
                 />
                 <div className="flex justify-between text-xs text-gray-300 mt-2">
                   <span>{filters.yearRange[0]}</span>
