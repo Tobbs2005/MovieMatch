@@ -5,10 +5,7 @@ from fastapi import FastAPI, Body
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional, Dict, Any
-from sentence_transformers import SentenceTransformer
-import faiss
 import random
-from functools import lru_cache
 import time
 
 # Import R2 data loader
@@ -50,47 +47,6 @@ gc.collect()
 
 print(f"✅ Loaded {len(df)} movies, aggressively memory optimized")
 
-# === Lazy Load ML Components ===
-model = None
-index = None
-
-def get_ml_components():
-    """Lazy load ML components on first use with aggressive memory optimization"""
-    global model, index
-    if model is None:
-        print("🔄 Loading minimal sentence transformer model...")
-        # Use the smallest possible model for memory efficiency
-        model = SentenceTransformer("all-MiniLM-L6-v2", device='cpu')
-        
-        print("🔍 Building compact FAISS index...")
-        # Use more memory-efficient index
-        dimension = embeddings.shape[1]
-        index = faiss.IndexFlatIP(dimension)
-        
-        # Add embeddings in smaller batches to manage memory
-        batch_size = 1000
-        for i in range(0, len(embeddings), batch_size):
-            batch = embeddings[i:i+batch_size]
-            index.add(batch)
-        
-        # Aggressive garbage collection
-        import gc
-        gc.collect()
-        
-        print("✅ ML components ready (aggressively optimized)")
-    return model, index
-
-# === Query Cache for Performance ===
-query_cache: Dict[str, Any] = {}
-CACHE_TTL = 300  # 5 minutes
-MAX_CACHE_SIZE = 100
-
-@lru_cache(maxsize=50)
-def get_query_embedding(query: str) -> np.ndarray:
-    """Cache query embeddings to avoid recomputation"""
-    model_instance, _ = get_ml_components()
-    return model_instance.encode(query, normalize_embeddings=True)
-
 # === FastAPI Setup ===
 app = FastAPI()
 app.add_middleware(
@@ -109,7 +65,6 @@ def health_check():
         "status": "healthy",
         "message": "MovieMatch AI Backend - Production Ready",
         "movies_loaded": len(df),
-        "embeddings_shape": list(embeddings.shape),
         "data_source": "real_movie_database",
         "version": "1.0"
     }
@@ -307,48 +262,21 @@ def feedback(_: FeedbackPayload):
 # === Search Endpoint ===
 
 @app.post("/search")
-def hybrid_search(payload: SearchPayload):
+def keyword_search(payload: SearchPayload):
     start_time = time.time()
-    query_lower = payload.query.lower()
-    genre_lower = payload.genre.lower() if payload.genre else None
-
-    # --- Fast Keyword Search First ---
+    
+    # --- Fast Case-Sensitive Keyword Search ---
     keyword_results = df[
-        df["title"].str.lower().str.contains(query_lower, na=False) |
-        df["overview"].str.lower().str.contains(query_lower, na=False) |
-        df["genres"].astype(str).str.lower().str.contains(query_lower, na=False)
+        df["title"].str.contains(payload.query, na=False, case=False) |
+        df["overview"].str.contains(payload.query, na=False, case=True) |
+        df["genres"].astype(str).str.contains(payload.query, na=False, case=True)
     ]
 
-    # --- Smart Semantic Search Strategy ---
-    semantic_results = pd.DataFrame()
-    query_words = payload.query.split()
-    
-    # Only use semantic search for complex queries or when keyword search is insufficient
-    should_use_semantic = (
-        len(keyword_results) < 8 and  # Few keyword matches
-        (len(query_words) > 1 or      # Multi-word query
-         any(len(word) > 8 for word in query_words))  # Complex/descriptive words
-    )
-    
-    if should_use_semantic:
-        # Use cached embedding function to avoid recomputation
-        query_embedding = get_query_embedding(payload.query)
-        query_embedding = query_embedding.reshape(1, -1).astype('float32')
-        
-        # FAISS search - much faster than computing all similarities
-        _, index_instance = get_ml_components()
-        scores, indices = index_instance.search(query_embedding, 12)  # Get top 12 semantic matches
-        semantic_results = df.iloc[indices[0]]
-
-    # --- Combine Results ---
-    if not semantic_results.empty:
-        combined = pd.concat([keyword_results, semantic_results]).drop_duplicates(subset="id")
-    else:
-        combined = keyword_results
+    combined = keyword_results
 
     # --- Early Filter Application (before expensive operations) ---
-    if genre_lower:
-        combined = combined[combined["genres"].astype(str).str.lower().str.contains(genre_lower, na=False)]
+    if payload.genre:
+        combined = combined[combined["genres"].astype(str).str.contains(payload.genre, na=False, case=True)]
     if payload.language:
         combined = combined[combined["original_language"].astype(str) == payload.language]
     
@@ -377,8 +305,7 @@ def hybrid_search(payload: SearchPayload):
     end_time = time.time()
     search_time = round((end_time - start_time) * 1000, 2)  # Convert to milliseconds
     print(f"Search '{payload.query}' took {search_time}ms - "
-          f"Keyword: {len(keyword_results)}, Semantic: {len(semantic_results)}, "
-          f"Final: {len(top_matches)}")
+          f"Keyword results: {len(combined)}")
     
     return {
         "movies": [
