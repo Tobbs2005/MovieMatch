@@ -30,9 +30,9 @@ df['vote_count'] = df['vote_count'].astype('int32')
 if 'genres' in df.columns:
     df['genres'] = df['genres'].astype('category')
 
-# Truncate long overview text to save memory
+# Keep full overview text for better user experience
 if 'overview' in df.columns:
-    df['overview'] = df['overview'].fillna('').str[:200]  # Max 200 chars
+    df['overview'] = df['overview'].fillna('')
 
 # Optimize embeddings memory (use float32)
 embeddings = embeddings.astype('float32')
@@ -63,7 +63,7 @@ def health_check():
     """Health check endpoint for Railway and other platforms"""
     return {
         "status": "healthy",
-        "message": "MovieMatch AI Backend - Production Ready",
+        "message": "MovieMatch Backend - Production Ready",
         "movies_loaded": len(df),
         "data_source": "real_movie_database",
         "version": "1.0"
