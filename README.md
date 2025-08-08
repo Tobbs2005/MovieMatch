@@ -54,6 +54,39 @@ python app.py
 ```
 Access at: http://localhost:8000
 
+### Data Setup (Required)
+
+### Data Setup (Required)
+
+**⚠️ Important**: This application requires both movie data AND pre-computed embeddings to function properly.
+
+**Option 1: Google Drive (Recommended for Local Development)**
+Download both required files from our Google Drive:
+1. **Go to**: [Google Drive - MovieMatch Dataset](GOOGLE_DRIVE_LINK_TO_BE_ADDED - contact me if needed)
+2. **Download both files**:
+   - `TMDB_movie_dataset_v11.csv` (~500MB)
+   - `movie_embeddings_v11.npy` (~2GB)
+3. **Place files in data directory**:
+   ```bash
+   # Create the data directory
+   mkdir -p backend/src/data/
+   
+   # Move downloaded files to:
+   # backend/src/data/TMDB_movie_dataset_v11.csv
+   # backend/src/data/movie_embeddings_v11.npy
+   ```
+
+**Option 2: Kaggle (CSV only - you generate embeddings)**
+- Download CSV from [TMDB Movies Dataset](https://www.kaggle.com/datasets/asaniczka/tmdb-movies-dataset-2023-930k-movies/data)
+- You'll need to generate your own embeddings using sentence transformers
+- Requires additional setup and processing time
+
+**Option 3: Cloudflare R2 (Production)**
+- Set up R2 environment variables (see Environment Configuration below)
+- Files are automatically downloaded from cloud storage
+
+**Note**: Without both files, the application will use limited sample data.
+
 
 
 
@@ -138,6 +171,37 @@ R2_ACCESS_KEY_ID=your_access_key_here
 R2_SECRET_ACCESS_KEY=your_secret_key_here
 R2_BUCKET_NAME=movie-match-data
 ```
+
+### 5. Download Movie Dataset (Required)
+
+**Important:** The AI recommendations require both movie data AND pre-computed embeddings.
+
+**Option A: Google Drive (Recommended)**
+1. **Download**: Go to [Google Drive - MovieMatch Dataset](GOOGLE_DRIVE_LINK_TO_BE_ADDED)
+2. **Get both files**:
+   - `TMDB_movie_dataset_v11.csv` (~500MB)
+   - `movie_embeddings_v11.npy` (~2GB)
+3. **Setup Data Directory**:
+   ```bash
+   # Create the data directory
+   mkdir -p backend/src/data/
+   
+   # Move both files to:
+   # backend/src/data/TMDB_movie_dataset_v11.csv
+   # backend/src/data/movie_embeddings_v11.npy
+   ```
+
+**Option B: Kaggle + Manual Embedding Generation**
+- CSV: [Kaggle TMDB Dataset](https://www.kaggle.com/datasets/asaniczka/tmdb-movies-dataset-2023-930k-movies/data)
+- Embeddings: You must generate your own using sentence transformers
+- Note: Requires technical setup - not recommended for beginners
+
+**File Requirements:**
+- **CSV File**: `TMDB_movie_dataset_v11.csv` (~500MB, 930K movies)
+- **Embeddings**: `movie_embeddings_v11.npy` (~2GB, pre-computed vectors)
+- **Location**: Both in `backend/src/data/` directory
+
+**Note:** App uses sample data if files are missing, but AI recommendations will be severely limited.
 
 ## 📖 Usage
 
@@ -343,6 +407,20 @@ CMD ["python", "app.py"]
    - Ensure backend allows frontend origin
    - Check FastAPI CORS middleware configuration
    - Verify frontend is making requests to correct backend URL
+
+7. **Limited recommendations or "No movies found"**
+   ```bash
+   # Check if both required files are properly placed
+   ls -la backend/src/data/TMDB_movie_dataset_v11.csv
+   ls -la backend/src/data/movie_embeddings_v11.npy
+   
+   # If files are missing, download from Google Drive:
+   # GOOGLE_DRIVE_LINK_TO_BE_ADDED
+   
+   # Ensure both files are in correct location:
+   # backend/src/data/TMDB_movie_dataset_v11.csv
+   # backend/src/data/movie_embeddings_v11.npy
+   ```
 
 ### Performance Tips
 
