@@ -11,7 +11,7 @@ import { Button } from './ui/button';
 import { Toaster } from './ui/sonner';
 import { MovieAPI } from '../services/movieAPI';
 import { Movie, UserMovieList } from '../types/movie';
-import { Home, List, Shuffle, Loader2 } from 'lucide-react';
+import { Home, List, Shuffle, Loader2, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 
@@ -29,6 +29,7 @@ export default function MovieMatchApp() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasStarted, setHasStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showControlsTip, setShowControlsTip] = useState(false);
   
   // Ref to track recently fetched movies to prevent duplicates
   const recentlyFetchedIds = useRef<Set<number>>(new Set());
@@ -210,6 +211,16 @@ export default function MovieMatchApp() {
     
     setCurrentView('swipe');
     setHasStarted(true);
+    
+    // Show controls tip for first-time users (after a short delay)
+    setTimeout(() => {
+      setShowControlsTip(true);
+      
+      // Auto-dismiss after 10 seconds
+      setTimeout(() => {
+        setShowControlsTip(false);
+      }, 10000);
+    }, 1000);
   };
 
   const handleGoHome = () => {
@@ -224,6 +235,11 @@ export default function MovieMatchApp() {
 
   const handleAction = async (action: 'like' | 'dislike' | 'skip' | 'save') => {
     if (!currentMovie || isLoading) return; // Prevent action if already loading
+
+    // Hide controls tip on first action
+    if (showControlsTip) {
+      setShowControlsTip(false);
+    }
 
     // Immediately clear current movie for instant feedback
     const movieToProcess = currentMovie;
@@ -388,6 +404,63 @@ export default function MovieMatchApp() {
                       onAction={handleAction}
                     />
                   </AnimatePresence>
+
+                  {/* Controls Tip for First-Time Users */}
+                  <AnimatePresence>
+                    {showControlsTip && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -20, scale: 0.9 }}
+                        transition={{ duration: 0.4, ease: "easeOut" }}
+                        className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-20"
+                      >
+                        <div className="bg-black/80 backdrop-blur-md text-white p-6 rounded-2xl border border-white/20 shadow-2xl max-w-sm mx-auto relative">
+                          <button
+                            onClick={() => setShowControlsTip(false)}
+                            className="absolute top-3 right-3 text-white/60 hover:text-white transition-colors p-1"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                          
+                          <div className="text-center mb-4">
+                            <h3 className="text-lg font-bold mb-3">🎬 How to Swipe</h3>
+                            <div className="space-y-3 text-sm">
+                              <div className="flex items-center justify-between gap-4">
+                                <span className="text-green-400 flex items-center gap-2">Like</span>
+                                <span className="text-gray-300">Swipe Right →</span>
+                              </div>
+                              <div className="flex items-center justify-between gap-4">
+                                <span className="text-red-400 flex items-center gap-2">Pass</span>
+                                <span className="text-gray-300">Swipe Left ←</span>
+                              </div>
+
+                              <div className="flex items-center justify-between gap-4">
+                                <span className="text-blue-400 flex items-center gap-2">Save</span>
+                                <span className="text-gray-300">Swipe Up ↑</span>
+                              </div>
+                              <div className="flex items-center justify-between gap-4">
+                                <span className="text-yellow-400 flex items-center gap-2">Skip</span>
+                                <span className="text-gray-300">Swipe Down ↓</span>
+                              </div>
+
+                            </div>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-xs text-white/70 mb-3">
+                              {isMobile ? 'Swipe on the movie card or use buttons below' : 'Swipe on the movie card in any direction'}
+                            </p>
+                            <button
+                              onClick={() => setShowControlsTip(false)}
+                              className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+                            >
+                              Got it!
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                   
                   <SwipeControls
                     onLike={() => handleAction('like')}
@@ -422,6 +495,11 @@ export default function MovieMatchApp() {
                       <span className="flex items-center gap-1">
                         <span className="text-green-400">→</span> Swipe right to like
                       </span>
+                      {!isMobile && (
+                        <span className="flex items-center gap-1">
+                          <span className="text-yellow-400">↓</span> Swipe down to skip
+                        </span>
+                      )}
                     </div>
                             <p className="text-xs text-muted-foreground mt-1">
                         Learning from {userLists.liked.length} liked movies

@@ -23,6 +23,10 @@ export function MovieCard({ movie, onAction, isSwipeable = true }: MovieCardProp
     onAction?.('save');
   };
 
+  const handleSwipeDown = () => {
+    onAction?.('skip');
+  };
+
   const cardContent = (
     <motion.div
       className="relative w-full max-w-md mx-auto bg-card rounded-2xl overflow-hidden shadow-2xl border border-border/50"
@@ -77,6 +81,7 @@ export function MovieCard({ movie, onAction, isSwipeable = true }: MovieCardProp
         onSwipeLeft={handleSwipeLeft}
         onSwipeRight={handleSwipeRight}
         onSwipeUp={handleSwipeUp}
+        onSwipeDown={handleSwipeDown}
       >
         {cardContent}
       </SwipeCard>
