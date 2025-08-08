@@ -485,7 +485,7 @@ export default function MovieMatchApp() {
                     
                     <div className="flex items-center justify-center gap-4 mt-2 text-xs text-muted-foreground">
                       <span className="flex items-center gap-1">
-                        <span className="text-red-400">←</span> Swipe left to pass
+                        <span className="text-red-400">←</span> Swipe left to dislike
                       </span>
                       {!isMobile && (
                         <span className="flex items-center gap-1">
