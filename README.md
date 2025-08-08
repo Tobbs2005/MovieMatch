@@ -6,7 +6,7 @@ A modern movie recommendation system with AI-powered suggestions and swipe-based
 
 ```
 movie-match/
-├── frontend/          # Next.js React frontend
+├── frontend/          # Next.js React frontend (deployed on Vercel)
 │   ├── src/
 │   │   ├── app/       # Next.js app router pages
 │   │   ├── components/# React components
@@ -28,26 +28,44 @@ movie-match/
 
 ## 🚀 **Getting Started**
 
-### Frontend Development
+This project consists of separate frontend and backend services that must be run independently.
+
+### Prerequisites
+- **Node.js 18+** and npm
+- **Python 3.8+** (3.9+ recommended)
+- **Git**
+
+### Frontend Setup
 ```bash
 cd frontend
 npm install
 npm run dev
 ```
+
 Access at: http://localhost:3000
 
-### Backend (Deployed)
-The backend is deployed on Hugging Face Spaces:
-- **URL:** https://tobbs2005-movie-match.hf.space
-- **Status:** https://tobbs2005-movie-match.hf.space/health
+### Backend Setup
+```bash
+cd backend
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt  # Install Python dependencies
+python app.py
+```
+Access at: http://localhost:8000
+
+
+
 
 ## 🔧 **Architecture**
 
 ```
-Frontend (Vercel)  →  Backend API (Hugging Face Spaces)
-     ↓                           ↓
-Next.js React App  →  FastAPI Python Server
+Frontend (localhost:3000)  →  Backend API (localhost:8000)
+        ↓                           ↓
+  Next.js React App      →  FastAPI Python Server
 ```
+
+**Note:** Both services must be running simultaneously for the application to work properly.
 
 ## ✨ **Features**
 
@@ -56,7 +74,6 @@ Next.js React App  →  FastAPI Python Server
 - **Real-time Learning**: Adapts to user preferences
 - **Smart Filtering**: Filter by genre, year, and preferences
 - **Responsive Design**: Works on all devices
-- **Dark/Light Mode**: Theme switching with system preference
 
 ## 🛠️ **Tech Stack**
 
@@ -74,8 +91,13 @@ Next.js React App  →  FastAPI Python Server
 
 ## 🚢 **Deployment**
 
-- **Frontend:** Deployed on Vercel
-- **Backend:** Deployed on Hugging Face Spaces
+### Local Development
+- **Frontend:** http://localhost:3000
+- **Backend:** http://localhost:8000
+
+### Production Options
+- **Frontend:** Can be deployed on Vercel, Netlify, or similar
+- **Backend:** Can be deployed on Hugging Face Spaces, Railway, or similar
 - **Data:** Cloudflare R2 (with local fallbacks)
 
 ## 📱 **Usage**
@@ -88,169 +110,44 @@ Next.js React App  →  FastAPI Python Server
 
 ## 🔗 **API Endpoints**
 
+**Base URL:** http://localhost:8000
+
 - `GET /` - Health check
 - `POST /recommend` - Get personalized recommendations
 - `POST /search` - Search movies semantically
-- `GET /movies/random` - Get random movies for swiping
+
+Visit http://localhost:8000/docs for interactive API documentation.
 
 ## 📄 **License**
 
 MIT License - Feel free to use and modify!
-- **Framer Motion** for animations
-- **Radix UI** components
-- **Sonner** for notifications
-
-### Backend
-- **FastAPI** for API endpoints
-- **sentence-transformers** for movie embeddings
-- **FAISS** for similarity search
-- **Pandas** for data processing
-- **NumPy** for numerical operations
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- **Node.js 18+** and npm
-- **Python 3.8+** (3.9+ recommended)
-- **Git**
-
-### 1. Clone the Repository
-
-```bash
-git clone <repository-url>
-cd movie-match
-```
-
-### 2. Install Frontend Dependencies
-
-```bash
-npm install
-```
-
-### 3. Setup Python Virtual Environment
-
-```bash
-# Create virtual environment
-python3 -m venv venv
-
-# Activate virtual environment (macOS/Linux)
-source venv/bin/activate
-
-# On Windows, use:
-# venv\Scripts\activate
-
-# Verify virtual environment is active (you should see (venv) in your prompt)
-which python  # Should show path with /venv/
-
-# Install Python dependencies
-pip install -r requirements.txt
-```
-
-> **⚠️ Important**: Make sure your virtual environment is activated before running the development server. You should see `(venv)` in your terminal prompt.
 
 ### 4. Environment Configuration
 
-Create a `.env.local` file in the root directory:
-
+**Frontend (.env.local in frontend/ directory):**
 ```env
-# Next.js Configuration
 NEXT_PUBLIC_API_URL=http://localhost:8000
 NODE_ENV=development
+```
 
-# Cloudflare R2 Configuration (Optional - for production/cloud deployment)
+**Backend (.env in backend/ directory, optional):**
+```env
+# Cloudflare R2 Configuration (Optional - for production)
 CLOUDFLARE_ACCOUNT_ID=your_account_id_here
 R2_ACCESS_KEY_ID=your_access_key_here  
 R2_SECRET_ACCESS_KEY=your_secret_key_here
 R2_BUCKET_NAME=movie-match-data
 ```
 
-> **Note**: R2 credentials are optional for local development. The app will fall back to local data files if R2 is not configured.
-
-### 5. Data Setup
-
-**Option A: Local Development (Recommended for getting started)**
-Place your data files in the `src/data/` directory:
-- `TMDB_movie_dataset_v11.csv` - Movie dataset
-- `movie_embeddings_v11.npy` - Pre-computed movie embeddings
-
-**Option B: Cloudflare R2 (Recommended for production)**
-1. **Create R2 bucket** in your Cloudflare dashboard
-2. **Get API credentials** from R2 > Manage R2 API tokens
-3. **Configure environment variables** in `.env.local`
-4. **Upload data to R2**:
-   ```bash
-   # First place local files in src/data/, then:
-   python upload_to_r2.py upload
-   
-   # Verify upload
-   python upload_to_r2.py list
-   ```
-
-> **Note**: The app automatically uses R2 if configured, otherwise falls back to local files.
-
-### 6. Start Development Server
-
-**🎉 One command to rule them all:**
-
-```bash
-# Make sure your virtual environment is activated first!
-source venv/bin/activate  # Skip if already activated
-
-# Start both frontend and backend
-npm run dev
-```
-
-This will start both services concurrently with colored output:
-- **🎨 Frontend**: http://localhost:3000 (or 3001 if 3000 is busy)
-- **🤖 Backend**: http://localhost:8000
-
-That's it! The app will automatically open in your browser and both services will reload when you make changes.
-
-### ✅ Verify Everything Works
-
-After running `npm run dev`, you should see:
-
-1. **Terminal output** showing both services starting:
-   ```
-   [FRONTEND] ▲ Next.js 15.4.5
-   [FRONTEND] - Local:        http://localhost:3000
-   [BACKEND] Starting MovieMatch AI Backend...
-   [BACKEND] INFO: Uvicorn running on http://0.0.0.0:8000
-   ```
-
-2. **Browser** automatically opens to http://localhost:3000
-
-3. **API accessible** at http://localhost:8000/docs
-
-4. **App functionality**:
-   - Click through the intro screen
-   - Select movies during onboarding
-   - See AI-powered recommendations
-   - Use swipe controls or buttons
-
-If any step fails, check the [Troubleshooting](#troubleshooting) section below.
-
-### Alternative: Run Services Separately
-
-If you prefer to run services in separate terminals:
-
-```bash
-# Terminal 1: Frontend only
-npm run frontend:only
-
-# Terminal 2: Backend only (with venv activated)
-source venv/bin/activate
-npm run backend:only
-```
-
 ## 📖 Usage
 
-1. **Open** http://localhost:3000 in your browser
-2. **Onboarding**: Select a few movies you like to get started  
-3. **Discover**: Swipe through AI-recommended movies
-4. **Filter**: Use genre, language, and year filters to refine suggestions
-5. **Manage**: View and organize your liked/saved movies in "My Lists"
+1. **Start Backend**: `cd backend && python app.py`
+2. **Start Frontend**: `cd frontend && npm run dev`
+3. **Open** http://localhost:3000 in your browser
+4. **Onboarding**: Select a few movies you like to get started  
+5. **Discover**: Swipe through AI-recommended movies
+6. **Filter**: Use genre, language, and year filters to refine suggestions
+7. **Manage**: View and organize your liked/saved movies in "My Lists"
 
 ## API Endpoints
 
@@ -307,16 +204,19 @@ Hybrid search (keyword + semantic)
 
 ### Available Scripts
 
+**Frontend (in frontend/ directory):**
 ```bash
-# Development (runs both frontend and backend)
-npm run dev                 # Start both services with concurrency
-npm run frontend:only       # Start only Next.js frontend
-npm run backend:only        # Start only FastAPI backend (requires active venv)
+npm run dev               # Start Next.js development server
+npm run build             # Build for production  
+npm run start             # Start production server
+npm run lint              # Run ESLint
+```
 
-# Production
-npm run build              # Build Next.js for production  
-npm run start              # Start production Next.js server
-npm run lint               # Run ESLint on frontend code
+**Backend (in backend/ directory):**
+```bash
+python app.py             # Start FastAPI development server
+# OR for production:
+uvicorn src.swipe_api:app --host 0.0.0.0 --port 8000
 ```
 
 ### Frontend Development
@@ -325,33 +225,14 @@ npm run lint               # Run ESLint on frontend code
 - Tailwind CSS for styling
 - Hot reload enabled in development
 - Component library: Radix UI + shadcn/ui
+- **Run with**: `cd frontend && npm run dev`
 
 ### Backend Development
 - FastAPI with automatic OpenAPI docs
-- Auto-reload enabled with `--reload` flag
+- Auto-reload enabled in development mode
 - Access API documentation at http://localhost:8000/docs
 - Interactive API testing at http://localhost:8000/redoc
-
-### Development Workflow
-
-1. **Always activate virtual environment first**:
-   ```bash
-   source venv/bin/activate
-   ```
-
-2. **Start development**:
-   ```bash
-   npm run dev  # Starts both services
-   ```
-
-3. **Make changes**:
-   - Frontend changes auto-reload in browser
-   - Backend changes auto-reload with uvicorn `--reload`
-   - Type errors show in terminal and VS Code
-
-4. **Test API endpoints**:
-   - Visit http://localhost:8000/docs for interactive testing
-   - Use browser dev tools Network tab to inspect requests
+- **Run with**: `cd backend && python app.py`
 
 ## Production Deployment
 
@@ -384,75 +265,92 @@ For production deployment, use Cloudflare R2 to store your large data files:
 
 ### Frontend (Vercel/Netlify)
 ```bash
+cd frontend
 npm run build
+npm run start
 ```
 
 ### Backend (Docker)
 ```dockerfile
 FROM python:3.9-slim
+WORKDIR /app
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 COPY src/ ./src/
-CMD ["uvicorn", "src.swipe_api:app", "--host", "0.0.0.0", "--port", "8000"]
+COPY app.py .
+CMD ["python", "app.py"]
 ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Virtual Environment Not Activated**
+1. **Backend not starting**
    ```bash
-   # You should see (venv) in your terminal prompt
-   # If not, activate it:
-   source venv/bin/activate
+   # Make sure you're in the backend directory
+   cd backend
    
-   # Verify it's working:
+   # Activate virtual environment
+   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   
+   # Verify virtual environment is active (you should see (venv) in prompt)
    which python  # Should show path with /venv/
-   which pip     # Should show path with /venv/
+   
+   # Install dependencies if needed
+   pip install -r requirements.txt
+   
+   # Start the backend
+   python app.py
    ```
 
-2. **Backend API not accessible**
-   - Ensure virtual environment is activated
+2. **Frontend API connection issues**
    - Ensure backend is running on port 8000
-   - Check `NEXT_PUBLIC_API_URL` in `.env.local`
-   - Try accessing http://localhost:8000/docs directly
+   - Check `NEXT_PUBLIC_API_URL=http://localhost:8000` in `frontend/.env.local`
+   - Try accessing http://localhost:8000/docs directly to verify backend
+   - Check browser console for CORS errors
 
-3. **Missing movie data**
-   - App works with sample data if CSV files are missing
-   - For full AI functionality, verify CSV and embedding files are in `src/data/`
-   - Check file paths in `swipe_api.py`
-
-4. **Python dependency issues**
+3. **Port conflicts**
    ```bash
-   # Recreate virtual environment if needed
-   rm -rf venv
-   python3 -m venv venv
-   source venv/bin/activate
+   # If port 3000 is busy, frontend will auto-assign next available port
+   # If port 8000 is busy, modify the port in backend/app.py:
+   # uvicorn.run(app, host="0.0.0.0", port=8001)
+   ```
+
+4. **Missing dependencies**
+   ```bash
+   # Frontend
+   cd frontend
+   rm -rf node_modules package-lock.json
+   npm install
+   
+   # Backend  
+   cd backend
    pip install --upgrade pip
    pip install -r requirements.txt
    ```
 
-5. **Port conflicts**
+5. **Virtual environment issues**
    ```bash
-   # Frontend: Change port in package.json dev script
-   "dev:frontend": "next dev -p 3001"
-   
-   # Backend: Change port in start-backend-dev.sh
-   uvicorn swipe_api:app --reload --port 8001
+   # Recreate virtual environment
+   cd backend
+   rm -rf venv
+   python3 -m venv venv
+   source venv/bin/activate
+   pip install -r requirements.txt
    ```
 
-6. **Memory issues with embeddings**
-   - Consider using FAISS with disk storage
-   - Reduce embedding dimensions if needed
-   - Monitor memory usage during development
+6. **CORS errors in browser**
+   - Ensure backend allows frontend origin
+   - Check FastAPI CORS middleware configuration
+   - Verify frontend is making requests to correct backend URL
 
 ### Performance Tips
 
-- Use FAISS IndexIVFFlat for large datasets
-- Implement pagination for movie results
-- Cache user vectors on client side
-- Use CDN for movie poster images
-- Keep virtual environment activated throughout development session
+- **Backend**: Use FAISS IndexIVFFlat for large datasets
+- **Frontend**: Implement pagination for movie results
+- **API**: Cache user vectors on client side
+- **Images**: Use CDN for movie poster images
+- **Development**: Keep both services running during development for best experience
 
 ## Contributing
 

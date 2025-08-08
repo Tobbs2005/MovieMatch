@@ -27,7 +27,6 @@ A FastAPI backend for personalized movie recommendations using AI and swipe-base
 - `GET /` - Health check
 - `POST /recommend` - Get movie recommendations
 - `POST /search` - Search movies semantically
-- `GET /movies/random` - Get random movies for swiping
 - `GET /health` - Detailed health status
 
 ## Usage
