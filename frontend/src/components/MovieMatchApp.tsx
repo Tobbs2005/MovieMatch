@@ -332,11 +332,11 @@ export default function MovieMatchApp() {
     <div className="min-h-screen bg-background">
       {/* Navigation */}
       <nav className="sticky top-0 z-10 bg-background/80 backdrop-blur-sm border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
+        <div className="max-w-full xl:max-w-7xl mx-auto px-2 sm:px-4 lg:px-8">
+          <div className="flex justify-between items-center h-14 sm:h-16">
             <div className="flex items-center gap-2">
               <h1 
-                className="text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity"
+                className="text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity"
                 onClick={handleGoHome}
                 title="Go back to intro screen"
               >
@@ -344,24 +344,32 @@ export default function MovieMatchApp() {
               </h1>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1 sm:gap-20">
+              
+              
               <Button
                 variant={currentView === 'swipe' ? 'default' : 'ghost'}
                 onClick={() => setCurrentView('swipe')}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4"
+                size="sm"
               >
-                <Home className="w-4 h-4" />
-                Discover
+                <Home className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">Discover</span>
+                <span className="sm:hidden">Home</span>
               </Button>
               
               <Button
                 variant={currentView === 'lists' ? 'default' : 'ghost'}
                 onClick={() => setCurrentView('lists')}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1 sm:gap-2 text-xs sm:text-sm px-2 sm:px-4"
+                size="sm"
               >
-                <List className="w-4 h-4" />
-                My Lists ({userLists.liked.length + userLists.saved.length})
+                <List className="w-3 h-3 sm:w-4 sm:h-4" />
+                <span className="hidden sm:inline">My Lists ({userLists.liked.length + userLists.saved.length})</span>
+                <span className="sm:hidden">Lists</span>
               </Button>
+
+              <ThemeToggle />
             </div>
           </div>
         </div>

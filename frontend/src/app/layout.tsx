@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "../components/ThemeProvider";
 import "./globals.css";
+import "../styles/globals.css";
 import { Analytics } from "@vercel/analytics/next";
 
 const geistSans = Geist({
@@ -25,11 +26,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider defaultTheme="system" storageKey="movie-match-theme">
+        <ThemeProvider defaultTheme="dark" storageKey="movie-match-theme">
           {children}
         </ThemeProvider>
         <Analytics />
