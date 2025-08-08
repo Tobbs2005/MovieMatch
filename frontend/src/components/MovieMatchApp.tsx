@@ -30,9 +30,11 @@ export default function MovieMatchApp() {
   const [hasStarted, setHasStarted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   
-  // Ref to track last fetched movie to prevent duplicates
-  const lastFetchedMovieId = useRef<number | null>(null);
+  // Ref to track recently fetched movies to prevent duplicates
+  const recentlyFetchedIds = useRef<Set<number>>(new Set());
   const fetchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fetchAttemptCount = useRef<number>(0);
+  const maxFetchAttempts = 5;
 
   // Detect if device is mobile
   useEffect(() => {
@@ -55,13 +57,13 @@ export default function MovieMatchApp() {
 
   // Available genres and languages (will be populated from backend or predefined)
   const availableGenres = [
-    'Action', 'Adventure', 'Animation', 'Comedy', 'Crime', 'Documentary',
-    'Drama', 'Family', 'Fantasy', 'History', 'Horror', 'Music', 'Mystery',
-    'Romance', 'Science Fiction', 'TV Movie', 'Thriller', 'War', 'Western'
+    'Action', 'Adventure', 'Animation', 'Comedy', 'Crime',
+    'Drama', 'Family', 'Fantasy', 'Horror', 
+    'Romance', 'Thriller'
   ];
 
   const availableLanguages = [
-    'en', 'es', 'fr', 'de', 'it', 'ja', 'ko', 'zh', 'hi', 'ar', 'pt', 'ru'
+    'en', 'es', 'fr', 'de', 'it', 'ja', 'ko', 'zh',
   ];
 
   const movieYearRange: [number, number] = [1900, 2024];
@@ -86,10 +88,24 @@ export default function MovieMatchApp() {
       clearTimeout(fetchTimeoutRef.current);
     }
     
+    // Check if we've exceeded max attempts
+    if (fetchAttemptCount.current >= maxFetchAttempts) {
+      console.log('Max fetch attempts reached, clearing recent cache and resetting');
+      recentlyFetchedIds.current.clear();
+      fetchAttemptCount.current = 0;
+      setCurrentMovie(null);
+      setIsLoading(false);
+      return;
+    }
+    
     setIsLoading(true);
     try {
       const seenIds = getAllSeenIds();
       const likedIds = getLikedIds();
+      
+      // Include recently fetched IDs to prevent API from returning the same movies
+      const recentIds = Array.from(recentlyFetchedIds.current);
+      const allExcludedIds = [...seenIds, ...recentIds];
 
       // Build filter object
       const filterObj: any = {};
@@ -108,7 +124,7 @@ export default function MovieMatchApp() {
 
       const response = await MovieAPI.getRecommendation({
         user_vector: userVector,
-        seen_ids: seenIds,
+        seen_ids: allExcludedIds, // Send both seen and recently fetched IDs
         liked_ids: likedIds,
         ...filterObj
       });
@@ -116,21 +132,43 @@ export default function MovieMatchApp() {
       if (response.error) {
         toast.error(response.error);
         setCurrentMovie(null);
+        fetchAttemptCount.current = 0; // Reset on error
       } else if (response.movie) {
-        // Check if we already have this movie in our seen lists OR if it's the same as last fetched
-        const movieExists = seenIds.includes(response.movie.movieId) || 
-                           lastFetchedMovieId.current === response.movie.movieId;
+        // Double-check for duplicates (should be rare now that we send excluded IDs to API)
+        const movieExists = allExcludedIds.includes(response.movie.movieId);
         
         if (movieExists) {
-          console.log('Duplicate movie detected, fetching another...');
+          console.log(`Unexpected duplicate movie detected (ID: ${response.movie.movieId}), attempt ${fetchAttemptCount.current + 1}/${maxFetchAttempts}`);
+          
+          // Add to recently fetched to exclude it next time
+          recentlyFetchedIds.current.add(response.movie.movieId);
+          
+          fetchAttemptCount.current++;
           setIsLoading(false);
-          // Use timeout to prevent rapid successive calls
-          fetchTimeoutRef.current = setTimeout(() => fetchNextMovie(), 200);
+          
+          if (fetchAttemptCount.current >= maxFetchAttempts) {
+            console.log('Max attempts reached, stopping fetch');
+            setCurrentMovie(null);
+            return;
+          }
+          
+          // Use exponential backoff for retry
+          const delay = Math.min(200 * Math.pow(2, fetchAttemptCount.current - 1), 2000);
+          fetchTimeoutRef.current = setTimeout(() => fetchNextMovie(), delay);
           return;
         }
 
-        // Update last fetched movie ID
-        lastFetchedMovieId.current = response.movie.movieId;
+        // Success! Add to recently fetched and reset attempt counter
+        recentlyFetchedIds.current.add(response.movie.movieId);
+        
+        // Limit cache size to prevent memory issues
+        if (recentlyFetchedIds.current.size > 50) {
+          const idsArray = Array.from(recentlyFetchedIds.current);
+          recentlyFetchedIds.current = new Set(idsArray.slice(-50));
+        }
+
+        // Reset attempt counter on success
+        fetchAttemptCount.current = 0;
 
         const movie: Movie = {
           movieId: response.movie.movieId,
@@ -150,10 +188,11 @@ export default function MovieMatchApp() {
       console.error('Error fetching recommendation:', error);
       toast.error('Failed to fetch movie recommendation. Please check your connection and try again.');
       setCurrentMovie(null);
+      fetchAttemptCount.current = 0; // Reset on error
     } finally {
       setIsLoading(false);
     }
-  }, [isLoading, getAllSeenIds, getLikedIds, filters, userVector]);
+  }, [isLoading, getAllSeenIds, getLikedIds, filters, userVector, maxFetchAttempts]);
 
   // Fetch movie when filters change or when starting
   useEffect(() => {
@@ -209,6 +248,12 @@ export default function MovieMatchApp() {
 
     setUserLists(newUserLists);
 
+    // Clear recently fetched cache periodically to avoid excluding too many movies
+    if (recentlyFetchedIds.current.size > 30) {
+      const idsArray = Array.from(recentlyFetchedIds.current);
+      recentlyFetchedIds.current = new Set(idsArray.slice(-15)); // Keep only last 15
+    }
+
     // Immediately fetch next movie for instant swipe experience
     fetchNextMovie();
 
@@ -252,6 +297,8 @@ export default function MovieMatchApp() {
   const resetMovies = () => {
     setCurrentMovie(null);
     setUserVector(null);
+    recentlyFetchedIds.current.clear();
+    fetchAttemptCount.current = 0;
     setFilters({
       genres: [],
       languages: [],
