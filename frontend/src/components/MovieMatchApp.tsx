@@ -397,7 +397,7 @@ export default function MovieMatchApp() {
                   />
                   
                   <div className="mt-6 text-center">
-                             {(userLists.liked.length >= 5) ? (
+                             {(userLists.liked.length >= 3) ? (
      
                       <p className="text-muted-foreground">
                       AI-powered recommendations based on your taste
