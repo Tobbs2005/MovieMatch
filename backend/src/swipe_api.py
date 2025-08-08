@@ -162,13 +162,14 @@ def recommend(payload: RecommendPayload):
 
         # Apply soft penalty for disliked movies
         disliked_ids = list(set(payload.seen_ids) - set(payload.liked_ids))
-        penalty_weight = 0.1
+        penalty_weight = 0.02  
         for mid in disliked_ids:
             idx = df.index[df["id"] == mid]
             if not idx.empty:
                 disliked_vec = embeddings[idx[0]]
                 sims = np.dot(embeddings, disliked_vec)
-                similarity_scores -= penalty_weight * sims
+                # Only penalize movies that are actually similar to disliked ones
+                similarity_scores -= penalty_weight * np.maximum(sims, 0)
 
         sorted_indices = np.argsort(similarity_scores)[::-1]
         genre_counts = {}
