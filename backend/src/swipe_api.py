@@ -103,8 +103,8 @@ class SearchPayload(BaseModel):
 def recommend(payload: RecommendPayload):
     seen_set = set(payload.seen_ids + payload.liked_ids)
 
-    # Onboarding mode: < 5 liked movies
-    if len(payload.liked_ids) < 5:
+    # Onboarding mode: < 3 liked movies
+    if len(payload.liked_ids) < 3:
         # Use more memory-efficient sampling
         top_indices = df['vote_count'].nlargest(100).index
         sample_size = min(30, len(top_indices))
