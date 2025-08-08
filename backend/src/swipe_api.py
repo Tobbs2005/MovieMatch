@@ -162,7 +162,7 @@ def recommend(payload: RecommendPayload):
 
         # Apply soft penalty for disliked movies
         disliked_ids = list(set(payload.seen_ids) - set(payload.liked_ids))
-        penalty_weight = 0.02  
+        penalty_weight = 0.1
         for mid in disliked_ids:
             idx = df.index[df["id"] == mid]
             if not idx.empty:
