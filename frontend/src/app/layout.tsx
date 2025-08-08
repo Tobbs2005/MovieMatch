@@ -30,7 +30,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        <ThemeProvider defaultTheme="dark" storageKey="movie-match-theme">
+        <ThemeProvider defaultTheme="dark" storageKey="movie-match-theme-v2">
           {children}
         </ThemeProvider>
         <Analytics />

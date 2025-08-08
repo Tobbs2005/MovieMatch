@@ -14,7 +14,7 @@ const ThemeProviderContext = createContext<ThemeProviderContextType | undefined>
 export function ThemeProvider({
   children,
   defaultTheme = 'dark',
-  storageKey = 'movie-match-theme',
+  storageKey = 'movie-match-theme-v2',
 }: {
   children: React.ReactNode;
   defaultTheme?: Theme;
@@ -23,7 +23,12 @@ export function ThemeProvider({
   const [theme, setTheme] = useState<Theme>(
     () => {
       if (typeof window !== 'undefined') {
-        return (localStorage.getItem(storageKey) as Theme) || defaultTheme;
+        const stored = localStorage.getItem(storageKey) as Theme;
+        // If no stored value, or if stored value is 'system', use defaultTheme
+        if (!stored || stored === 'system') {
+          return defaultTheme;
+        }
+        return stored;
       }
       return defaultTheme;
     }

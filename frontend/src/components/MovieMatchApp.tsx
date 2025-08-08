@@ -344,7 +344,7 @@ export default function MovieMatchApp() {
               </h1>
             </div>
             
-            <div className="flex items-center gap-1 sm:gap-20">
+            <div className="flex items-center gap-1 sm:gap-15">
               
               
               <Button
