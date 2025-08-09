@@ -67,7 +67,7 @@ export default function MovieMatchApp() {
     'en', 'es', 'fr', 'de', 'it', 'ja', 'ko', 'zh',
   ];
 
-  const movieYearRange: [number, number] = [1900, 2024];
+  const movieYearRange: [number, number] = [1980, 2024];
 
   // Get all movie IDs that have been seen
   const getAllSeenIds = useCallback(() => {
