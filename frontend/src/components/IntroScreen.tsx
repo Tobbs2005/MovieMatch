@@ -106,6 +106,15 @@ export function IntroScreen({ onStartSwiping }: IntroScreenProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-500/10 via-background to-blue-500/10 flex items-center justify-center p-6">
+      {/* User Note about Backend Spin-up */}
+      <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 max-w-xl w-full px-4">
+        <div className="bg-yellow-100 border border-yellow-300 text-yellow-900 rounded-lg px-4 py-3 shadow-md text-sm flex items-center gap-2">
+          <Loader2 className="w-4 h-4 animate-spin text-yellow-600" />
+          <span>
+            Note: The backend is hosted on Hugging Face Spaces, which uses containerized infrastructure. After periods of inactivity, the service may require a cold start, resulting in longer response times while the container is being reactivated. If no movie data appears, please wait a moment and try refreshing the page.
+          </span>
+        </div>
+      </div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
